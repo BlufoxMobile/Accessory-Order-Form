@@ -317,7 +317,7 @@ const state = {
   productList: [],        // [ { upc, description, price, priceNum, searchBlob } ]
   directory: null,        // { stores, storeManagers, storeDMs, storeManagerNames }
   store: { name:'', managerName:'', managerEmail:'', dmEmail:'' },
-  selections: Array.from({length:ITEM_SLOTS},()=>({upc:'',description:'',price:'',qty:1})),
+  selections: Array.from({length:ITEM_SLOTS},()=>({upc:'',description:'',price:'',qty:0})),
   activeDropdown: null,
   activeIndex: -1,
 };
@@ -432,7 +432,7 @@ function renderItems(){
       </div>
       <div class="qty">
         <button type="button" data-qty="-1" data-idx="${i}" aria-label="Decrease">−</button>
-        <input type="number" min="1" max="9999" step="1" value="1" id="qty-${i}" data-idx="${i}" />
+        <input type="number" min="0" max="9999" step="1" value="0" id="qty-${i}" data-idx="${i}" />
         <button type="button" data-qty="+1" data-idx="${i}" aria-label="Increase">+</button>
       </div>
       <button type="button" class="item-trash" data-trash="${i}" title="Clear row">🗑</button>
@@ -460,7 +460,7 @@ function attachItemHandlers(){
       const idx = parseInt(e.currentTarget.dataset.idx,10);
       const delta = parseInt(e.currentTarget.dataset.qty,10);
       const inp = $('qty-' + idx);
-      const next = Math.max(1, Math.min(9999, (parseInt(inp.value,10)||1) + delta));
+      const next = Math.max(0, Math.min(9999, (parseInt(inp.value,10)||0) + delta));
       inp.value = next;
       state.selections[idx].qty = next;
       updateTotals();
@@ -470,24 +470,24 @@ function attachItemHandlers(){
     inp.addEventListener('input', e => {
       const idx = parseInt(e.currentTarget.dataset.idx,10);
       let v = parseInt(e.currentTarget.value,10);
-      if (isNaN(v) || v < 1) v = 1;
+      if (isNaN(v) || v < 0) v = 0;
       if (v > 9999) v = 9999;
       state.selections[idx].qty = v;
       updateTotals();
     });
     inp.addEventListener('blur', e => {
-      if (!e.currentTarget.value) e.currentTarget.value = 1;
+      if (!e.currentTarget.value) e.currentTarget.value = 0;
     });
   });
 }
 
 function clearSlot(idx){
-  state.selections[idx] = {upc:'',description:'',price:'',qty:1};
+  state.selections[idx] = {upc:'',description:'',price:'',qty:0};
   const inp = $('ac-' + idx);
   inp.value = '';
   inp.classList.remove('has-selection');
   $('meta-' + idx).innerHTML = '';
-  $('qty-' + idx).value = 1;
+  $('qty-' + idx).value = 0;
   document.querySelector('.item-row[data-idx="'+idx+'"]').classList.remove('filled');
   updateTotals();
 }
@@ -582,7 +582,11 @@ function setActiveOption(opts){
 function selectProduct(idx, upc){
   const p = state.productList.find(x => x.upc === upc);
   if (!p) return;
-  state.selections[idx] = { upc: p.upc, description: p.description, price: p.price, qty: state.selections[idx].qty || 1 };
+  // When a product is picked, default qty to 1 if the slot is still empty.
+  const existingQty = parseInt(state.selections[idx].qty, 10) || 0;
+  const qty = existingQty > 0 ? existingQty : 1;
+  state.selections[idx] = { upc: p.upc, description: p.description, price: p.price, qty };
+  $('qty-' + idx).value = qty;
 
   const inp = $('ac-' + idx);
   inp.value = p.description;
@@ -606,7 +610,8 @@ function closeAllDropdowns(){
 //  TOTALS + SUBMIT GATE
 // ============================================================================
 function updateTotals(){
-  const filled = state.selections.filter(s => s.upc);
+  // A line only counts if BOTH an accessory is selected AND qty > 0
+  const filled = state.selections.filter(s => s.upc && (parseInt(s.qty,10)||0) > 0);
   const lines = filled.length;
   const units = filled.reduce((a,s) => a + (parseInt(s.qty,10)||0), 0);
   const dollars = filled.reduce((a,s) => a + (parsePrice(s.price) * (parseInt(s.qty,10)||0)), 0);
@@ -629,9 +634,9 @@ async function submitOrder(){
 
   const items = state.selections
     .map((s, i) => ({ slot: i+1, ...s, priceNum: parsePrice(s.price), lineTotal: parsePrice(s.price) * (parseInt(s.qty,10)||0) }))
-    .filter(s => s.upc);
+    .filter(s => s.upc && (parseInt(s.qty,10)||0) > 0);
 
-  if (items.length === 0){ showToast('Please select at least one accessory.','error'); return; }
+  if (items.length === 0){ showToast('Please select at least one accessory with quantity ≥ 1.','error'); return; }
 
   const totalQty = items.reduce((a,s)=>a + (parseInt(s.qty,10)||0), 0);
   const totalDollars = items.reduce((a,s)=>a + s.lineTotal, 0);
