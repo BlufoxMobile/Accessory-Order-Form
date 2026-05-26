@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Accessory Order Form — Blufox</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0e1a;--card:#111827;--card-2:#0f172a;--border:#1e293b;
+    --accent:#3b82f6;--accent-2:#2563eb;--glow:rgba(59,130,246,0.25);
+    --red:#ef4444;--green:#22c55e;--warn:#fbbf24;--orange:#f97316;
+    --text:#f1f5f9;--muted:#94a3b8;--inp:#0f172a;--inpb:#334155;
+  }
+  body{
+    min-height:100vh;
+    background:linear-gradient(175deg,var(--bg) 0%,#0f172a 100%);
+    font-family:'DM Sans',sans-serif;color:var(--text);
+    padding:24px 12px 80px;
+  }
+  .wrap{max-width:1100px;margin:0 auto}
+  header.hdr{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:20px 24px;box-shadow:0 8px 32px rgba(0,0,0,.35);margin-bottom:20px;
+  }
+  .hdr-left{display:flex;align-items:center;gap:18px}
+  .logo-img{height:52px;width:auto;display:block;flex-shrink:0}
+  .hdr h1{font-size:22px;font-weight:700;letter-spacing:.02em;font-family:'Space Grotesk',sans-serif}
+  .pill{
+    padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;
+    background:rgba(59,130,246,.12);color:var(--accent);border:1px solid rgba(59,130,246,.3);
+  }
+  .pill.warn{background:rgba(251,191,36,.12);color:var(--warn);border-color:rgba(251,191,36,.3)}
+  .pill.err{background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.3)}
+  .pill.ok{background:rgba(34,197,94,.12);color:var(--green);border-color:rgba(34,197,94,.3)}
+
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:22px;box-shadow:0 8px 32px rgba(0,0,0,.35);margin-bottom:18px;
+  }
+  .card h2{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+
+  .intro{
+    background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.02));
+    border:1px solid rgba(59,130,246,.18);border-radius:12px;padding:18px 20px;
+    color:#cbd5e1;font-size:14px;line-height:1.6;
+  }
+  .intro strong{color:var(--text)}
+
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .inp,.sel{
+    width:100%;padding:11px 14px;font-size:14px;color:var(--text);
+    background:var(--inp);border:1.5px solid var(--inpb);border-radius:8px;
+    outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit;
+  }
+  .inp:focus,.sel:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);background:#0b1220}
+  .inp::placeholder{color:#64748b}
+  .inp[readonly]{background:#0b1220;color:#94a3b8;cursor:not-allowed}
+  .sel{
+    appearance:none;cursor:pointer;
+    background:var(--inp) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 10px center;
+    background-size:18px;padding-right:36px;
+  }
+  .sel option{background:var(--inp);color:var(--text)}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic}
+  .hint.routed{color:var(--green);font-style:normal;font-weight:500}
+
+  /* Items grid */
+  .item-list{display:flex;flex-direction:column;gap:10px}
+  .item-row{
+    display:grid;grid-template-columns:32px 1fr 130px 36px;gap:10px;align-items:start;
+    padding:10px;background:var(--card-2);border:1px solid var(--border);border-radius:10px;
+  }
+  .item-row.filled{border-color:rgba(59,130,246,.45);background:linear-gradient(180deg,rgba(59,130,246,.05),transparent)}
+  .item-num{
+    display:flex;align-items:center;justify-content:center;
+    width:32px;height:38px;font-size:12px;font-weight:700;color:var(--muted);
+    background:var(--inp);border-radius:8px;border:1px solid var(--border);
+  }
+  .ac-wrap{position:relative}
+  .ac-input{
+    width:100%;padding:10px 12px;font-size:13px;color:var(--text);
+    background:var(--inp);border:1.5px solid var(--inpb);border-radius:8px;
+    outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s;
+  }
+  .ac-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);background:#0b1220}
+  .ac-input.has-selection{padding-right:30px;border-color:rgba(34,197,94,.4)}
+  .ac-clear{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    width:20px;height:20px;border:none;background:transparent;color:var(--muted);
+    cursor:pointer;display:none;border-radius:50%;font-size:14px;line-height:1;
+  }
+  .ac-clear:hover{background:rgba(239,68,68,.15);color:var(--red)}
+  .ac-input.has-selection ~ .ac-clear{display:flex;align-items:center;justify-content:center}
+
+  .ac-meta{
+    font-size:11px;color:var(--muted);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;
+    padding:0 4px;min-height:14px;
+  }
+  .ac-meta .upc{font-family:'Courier New',monospace;color:#cbd5e1}
+  .ac-meta .price{color:var(--green);font-weight:600}
+
+  .ac-dropdown{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
+    background:#0b1220;border:1px solid var(--border);border-radius:10px;
+    max-height:280px;overflow-y:auto;
+    box-shadow:0 12px 36px rgba(0,0,0,.5);display:none;
+  }
+  .ac-dropdown.show{display:block}
+  .ac-option{
+    padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);
+    display:flex;flex-direction:column;gap:3px;transition:background .12s;
+  }
+  .ac-option:last-child{border-bottom:none}
+  .ac-option:hover,.ac-option.active{background:rgba(59,130,246,.12)}
+  .ac-option .desc{font-size:13px;color:var(--text);line-height:1.35}
+  .ac-option .meta{font-size:11px;color:var(--muted);display:flex;gap:10px}
+  .ac-option .meta .upc{font-family:'Courier New',monospace;color:#cbd5e1}
+  .ac-option .meta .price{color:var(--green);font-weight:600}
+  .ac-empty{padding:14px;color:var(--muted);font-size:12px;text-align:center}
+  .ac-hint{padding:8px 12px;color:var(--muted);font-size:11px;font-style:italic;text-align:center;border-bottom:1px solid var(--border)}
+
+  /* Qty stepper */
+  .qty{
+    display:flex;align-items:center;gap:0;border:1.5px solid var(--inpb);border-radius:8px;
+    background:var(--inp);overflow:hidden;height:38px;
+  }
+  .qty button{
+    width:32px;height:100%;border:none;background:transparent;color:var(--text);
+    cursor:pointer;font-size:18px;font-weight:600;transition:background .12s;
+  }
+  .qty button:hover{background:rgba(59,130,246,.18);color:var(--accent)}
+  .qty button:disabled{opacity:.35;cursor:not-allowed}
+  .qty input{
+    flex:1;width:100%;border:none;background:transparent;color:var(--text);
+    text-align:center;font-size:14px;font-weight:600;font-family:inherit;outline:none;
+    -moz-appearance:textfield;
+  }
+  .qty input::-webkit-outer-spin-button,
+  .qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+  .item-trash{
+    width:36px;height:38px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);
+    cursor:pointer;font-size:14px;transition:all .15s;
+  }
+  .item-trash:hover{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
+
+  /* Footer / submit */
+  .footer-bar{
+    position:sticky;bottom:0;margin-top:18px;
+    background:linear-gradient(180deg,transparent,rgba(10,14,26,.95) 30%);
+    padding:18px 0 4px;z-index:60;
+  }
+  .submit-card{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:16px 22px;display:flex;align-items:center;justify-content:space-between;
+    gap:14px;flex-wrap:wrap;box-shadow:0 8px 32px rgba(0,0,0,.45);
+  }
+  .totals{display:flex;gap:18px;flex-wrap:wrap}
+  .totals .tt{display:flex;flex-direction:column;gap:2px}
+  .totals .tt .n{font-size:20px;font-weight:700;color:var(--text);font-family:'Space Grotesk',sans-serif}
+  .totals .tt .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+  .btn{
+    padding:13px 26px;font-size:14px;font-weight:700;letter-spacing:.02em;
+    border:none;border-radius:10px;cursor:pointer;transition:transform .12s,box-shadow .2s,opacity .2s;
+    display:inline-flex;align-items:center;gap:8px;font-family:inherit;
+  }
+  .btn-primary{
+    color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    box-shadow:0 4px 20px var(--glow);
+  }
+  .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 24px var(--glow)}
+  .btn-primary:disabled{background:var(--inpb);box-shadow:none;cursor:not-allowed;opacity:.6}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;
+    box-shadow:0 12px 40px rgba(0,0,0,.55);opacity:0;transition:opacity .25s,transform .25s;
+    z-index:9999;max-width:90vw;text-align:center;pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+  .toast.success{background:linear-gradient(135deg,var(--green),#16a34a);color:#fff}
+  .toast.error{background:linear-gradient(135deg,var(--red),#dc2626);color:#fff}
+  .toast.info{background:var(--card);color:var(--text);border:1px solid var(--accent)}
+
+  /* Loading */
+  .loading{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:30px;color:var(--muted);font-size:14px;
+  }
+  .spinner{
+    width:18px;height:18px;border:2.5px solid rgba(255,255,255,.18);
+    border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Success overlay */
+  .success-overlay{
+    position:fixed;inset:0;background:rgba(10,14,26,.85);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:10000;
+  }
+  .success-overlay.show{display:flex}
+  .success-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:36px 32px;max-width:460px;width:100%;text-align:center;
+    box-shadow:0 25px 60px rgba(0,0,0,.5);
+  }
+  .success-card .ico{
+    width:72px;height:72px;border-radius:50%;
+    background:linear-gradient(135deg,var(--green),#16a34a);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+    font-size:36px;color:#fff;
+  }
+  .success-card h2{font-size:22px;font-weight:700;margin-bottom:10px;font-family:'Space Grotesk',sans-serif}
+  .success-card p{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px}
+  .success-card .summary{
+    background:var(--card-2);border:1px solid var(--border);border-radius:10px;
+    padding:14px;margin-bottom:20px;text-align:left;font-size:13px;color:#cbd5e1;
+  }
+  .success-card .summary strong{color:var(--text)}
+
+  @media (max-width:640px){
+    .item-row{grid-template-columns:30px 1fr 110px 32px;gap:8px;padding:8px}
+    .item-num{font-size:11px}
+    .hdr h1{font-size:18px}
+    .totals .tt .n{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hdr">
+    <div class="hdr-left">
+      <img class="logo-img" alt="Blufox Mobile" src="data:image/png;base64,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" />
+      <div>
+        <h1>Accessory Order Form</h1>
+      </div>
+    </div>
+    <div id="dataStatus" class="pill">Loading inventory…</div>
+  </header>
+
+  <div class="card">
+    <div class="intro">
+      <strong>Please select up to 20 accessories that you need in your store.</strong>
+      Enter a total of how many you think you can sell. Please don't overstock accessories and only order what you can sell.
+      Be mindful of any phone models changing in the near future with each of your orders.
+      If you have any questions, please contact Jeff or Eric to ensure we have the exact accessory you are looking for. Thank you!
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Store Information</h2>
+    <div class="field">
+      <label for="storeSel">Store *</label>
+      <select id="storeSel" class="sel">
+        <option value="">— Select your store —</option>
+      </select>
+      <div class="hint" id="storeHint">Your manager and district manager will be notified automatically when you submit.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Accessory Selections <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(type SKU, description, or price — e.g. "A36", "OtterBox", "$79.99")</span></h2>
+    <div id="itemList" class="item-list">
+      <div class="loading"><div class="spinner"></div> Loading inventory…</div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div class="submit-card">
+      <div class="totals">
+        <div class="tt"><div class="n" id="totLines">0</div><div class="l">Lines Filled</div></div>
+        <div class="tt"><div class="n" id="totQty">0</div><div class="l">Total Units</div></div>
+        <div class="tt"><div class="n" id="totDollars">$0.00</div><div class="l">Est. Cost</div></div>
+      </div>
+      <button id="submitBtn" class="btn btn-primary" disabled>Submit Order</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="successOverlay" class="success-overlay">
+  <div class="success-card">
+    <div class="ico">✓</div>
+    <h2>Order Submitted!</h2>
+    <p>Your accessory order has been sent. Jeff and Eric will review and follow up shortly.</p>
+    <div class="summary" id="successSummary"></div>
+    <button class="btn btn-primary" onclick="location.reload()">Submit Another Order</button>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+//  CONFIG
+// ============================================================================
+const ZAPIER_WEBHOOK = 'https://hooks.zapier.com/hooks/catch/20441079/4oxy72u/';
+const INVENTORY_URL  = 'https://raw.githubusercontent.com/jeffbilbrey1985/pricetaggenerator/main/index.html';
+const DIRECTORY_URL  = 'https://raw.githubusercontent.com/blufoxmobile/Daily-Sales-Report/main/data/store-directory.json';
+const ITEM_SLOTS = 20;
+const MAX_RESULTS = 40;
+
+// ============================================================================
+//  STATE
+// ============================================================================
+const state = {
+  productLibrary: {},     // { upc: { description, price, priceNum } }
+  productList: [],        // [ { upc, description, price, priceNum, searchBlob } ]
+  directory: null,        // { stores, storeManagers, storeDMs, storeManagerNames }
+  store: { name:'', managerName:'', managerEmail:'', dmEmail:'' },
+  selections: Array.from({length:ITEM_SLOTS},()=>({upc:'',description:'',price:'',qty:1})),
+  activeDropdown: null,
+  activeIndex: -1,
+};
+
+// ============================================================================
+//  UTIL
+// ============================================================================
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const parsePrice = (p) => { const n = parseFloat(String(p||'').replace(/[^\d.]/g,'')); return isNaN(n) ? 0 : n; };
+const fmt$ = (n) => '$' + (Number(n)||0).toFixed(2);
+
+function showToast(msg, kind='info', ms=3000){
+  const t = $('toast');
+  t.className = 'toast ' + kind + ' show';
+  t.textContent = msg;
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+// ============================================================================
+//  DATA LOADING
+// ============================================================================
+async function loadInventory(){
+  const resp = await fetch(INVENTORY_URL, { cache: 'no-store' });
+  if (!resp.ok) throw new Error('Inventory fetch failed (' + resp.status + ')');
+  const html = await resp.text();
+
+  // Extract: const productLibrary = { ... };
+  const m = html.match(/const\s+productLibrary\s*=\s*(\{[\s\S]*?\})\s*;\s*\n/);
+  if (!m) throw new Error('productLibrary not found in pricetaggenerator');
+
+  let lib;
+  try { lib = JSON.parse(m[1]); }
+  catch(e){ throw new Error('productLibrary JSON parse failed: ' + e.message); }
+
+  state.productLibrary = lib;
+  state.productList = Object.entries(lib).map(([upc, p]) => {
+    const desc = p.description || p.name || '';
+    const price = p.price || '';
+    const priceNum = parsePrice(price);
+    return {
+      upc,
+      description: desc,
+      price: price,
+      priceNum: priceNum,
+      searchBlob: (upc + ' ' + desc + ' ' + price).toLowerCase()
+    };
+  }).filter(x => x.description); // drop empty rows
+}
+
+async function loadDirectory(){
+  const resp = await fetch(DIRECTORY_URL, { cache: 'no-store' });
+  if (!resp.ok) throw new Error('Store directory fetch failed (' + resp.status + ')');
+  state.directory = await resp.json();
+}
+
+function populateStores(){
+  const sel = $('storeSel');
+  const stores = (state.directory.stores || []).slice().sort();
+  stores.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+}
+
+function onStoreChange(){
+  const v = $('storeSel').value;
+  const d = state.directory || {};
+  state.store = {
+    name: v,
+    managerName:  (d.storeManagerNames && d.storeManagerNames[v]) || '',
+    managerEmail: (d.storeManagers     && d.storeManagers[v])     || '',
+    dmEmail:      (d.storeDMs          && d.storeDMs[v])          || ''
+  };
+  const hint = $('storeHint');
+  if (v && state.store.managerEmail){
+    hint.className = 'hint routed';
+    hint.textContent = `Order will be routed to ${state.store.managerName || state.store.managerEmail}` +
+      (state.store.dmEmail ? ` and DM ${state.store.dmEmail}` : '') + '.';
+  } else if (v){
+    hint.className = 'hint';
+    hint.textContent = 'No manager email on file — order will go to Jeff for routing.';
+  } else {
+    hint.className = 'hint';
+    hint.textContent = 'Your manager and district manager will be notified automatically when you submit.';
+  }
+  updateTotals();
+}
+
+// ============================================================================
+//  ITEM ROWS
+// ============================================================================
+function renderItems(){
+  const wrap = $('itemList');
+  wrap.innerHTML = '';
+  for (let i = 0; i < ITEM_SLOTS; i++){
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <div class="item-num">${i+1}</div>
+      <div>
+        <div class="ac-wrap">
+          <input type="text" class="ac-input" id="ac-${i}" data-idx="${i}"
+                 placeholder="Type a SKU, description, or price…" autocomplete="off" />
+          <button type="button" class="ac-clear" data-idx="${i}" title="Clear">×</button>
+          <div class="ac-dropdown" id="dd-${i}"></div>
+        </div>
+        <div class="ac-meta" id="meta-${i}"></div>
+      </div>
+      <div class="qty">
+        <button type="button" data-qty="-1" data-idx="${i}" aria-label="Decrease">−</button>
+        <input type="number" min="1" max="9999" step="1" value="1" id="qty-${i}" data-idx="${i}" />
+        <button type="button" data-qty="+1" data-idx="${i}" aria-label="Increase">+</button>
+      </div>
+      <button type="button" class="item-trash" data-trash="${i}" title="Clear row">🗑</button>
+    `;
+    wrap.appendChild(row);
+  }
+  attachItemHandlers();
+}
+
+function attachItemHandlers(){
+  document.querySelectorAll('.ac-input').forEach(inp => {
+    inp.addEventListener('input', onAcInput);
+    inp.addEventListener('focus', onAcInput);
+    inp.addEventListener('keydown', onAcKey);
+    inp.addEventListener('blur', () => setTimeout(closeAllDropdowns, 150));
+  });
+  document.querySelectorAll('.ac-clear').forEach(b => {
+    b.addEventListener('click', e => clearSlot(parseInt(e.currentTarget.dataset.idx,10)));
+  });
+  document.querySelectorAll('[data-trash]').forEach(b => {
+    b.addEventListener('click', e => clearSlot(parseInt(e.currentTarget.dataset.trash,10)));
+  });
+  document.querySelectorAll('[data-qty]').forEach(b => {
+    b.addEventListener('click', e => {
+      const idx = parseInt(e.currentTarget.dataset.idx,10);
+      const delta = parseInt(e.currentTarget.dataset.qty,10);
+      const inp = $('qty-' + idx);
+      const next = Math.max(1, Math.min(9999, (parseInt(inp.value,10)||1) + delta));
+      inp.value = next;
+      state.selections[idx].qty = next;
+      updateTotals();
+    });
+  });
+  document.querySelectorAll('input[type="number"][id^="qty-"]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const idx = parseInt(e.currentTarget.dataset.idx,10);
+      let v = parseInt(e.currentTarget.value,10);
+      if (isNaN(v) || v < 1) v = 1;
+      if (v > 9999) v = 9999;
+      state.selections[idx].qty = v;
+      updateTotals();
+    });
+    inp.addEventListener('blur', e => {
+      if (!e.currentTarget.value) e.currentTarget.value = 1;
+    });
+  });
+}
+
+function clearSlot(idx){
+  state.selections[idx] = {upc:'',description:'',price:'',qty:1};
+  const inp = $('ac-' + idx);
+  inp.value = '';
+  inp.classList.remove('has-selection');
+  $('meta-' + idx).innerHTML = '';
+  $('qty-' + idx).value = 1;
+  document.querySelector('.item-row[data-idx="'+idx+'"]').classList.remove('filled');
+  updateTotals();
+}
+
+// ============================================================================
+//  AUTOCOMPLETE
+// ============================================================================
+function onAcInput(e){
+  const inp = e.currentTarget;
+  const idx = parseInt(inp.dataset.idx,10);
+  const q = inp.value.trim().toLowerCase();
+
+  // typing invalidates a previous selection
+  if (state.selections[idx].upc && state.selections[idx].description !== inp.value){
+    state.selections[idx].upc = '';
+    state.selections[idx].description = '';
+    state.selections[idx].price = '';
+    inp.classList.remove('has-selection');
+    $('meta-' + idx).innerHTML = '';
+    document.querySelector('.item-row[data-idx="'+idx+'"]').classList.remove('filled');
+    updateTotals();
+  }
+
+  const dd = $('dd-' + idx);
+  state.activeDropdown = dd;
+  state.activeIndex = -1;
+
+  if (!q){
+    dd.innerHTML = '<div class="ac-hint">Start typing to search the inventory (try "A36", "OtterBox", or "$29.99")</div>';
+    dd.classList.add('show');
+    return;
+  }
+
+  const terms = q.split(/\s+/).filter(Boolean);
+  const matches = state.productList.filter(p => {
+    return terms.every(t => p.searchBlob.includes(t));
+  }).slice(0, MAX_RESULTS);
+
+  if (matches.length === 0){
+    dd.innerHTML = '<div class="ac-empty">No matches. Try a different search term.</div>';
+  } else {
+    dd.innerHTML = matches.map((p,i) => `
+      <div class="ac-option" data-upc="${esc(p.upc)}" data-idx="${idx}">
+        <div class="desc">${esc(p.description)}</div>
+        <div class="meta">
+          <span class="upc">${esc(p.upc)}</span>
+          <span class="price">${esc(p.price)}</span>
+        </div>
+      </div>
+    `).join('');
+    dd.querySelectorAll('.ac-option').forEach(o => {
+      o.addEventListener('mousedown', e => {
+        e.preventDefault();
+        selectProduct(parseInt(o.dataset.idx,10), o.dataset.upc);
+      });
+    });
+  }
+  dd.classList.add('show');
+}
+
+function onAcKey(e){
+  const idx = parseInt(e.currentTarget.dataset.idx,10);
+  const dd = $('dd-' + idx);
+  const opts = Array.from(dd.querySelectorAll('.ac-option'));
+  if (!dd.classList.contains('show') || opts.length === 0) return;
+
+  if (e.key === 'ArrowDown'){
+    e.preventDefault();
+    state.activeIndex = Math.min(opts.length - 1, state.activeIndex + 1);
+    setActiveOption(opts);
+  } else if (e.key === 'ArrowUp'){
+    e.preventDefault();
+    state.activeIndex = Math.max(0, state.activeIndex - 1);
+    setActiveOption(opts);
+  } else if (e.key === 'Enter'){
+    e.preventDefault();
+    const target = state.activeIndex >= 0 ? opts[state.activeIndex] : opts[0];
+    if (target) selectProduct(idx, target.dataset.upc);
+  } else if (e.key === 'Escape'){
+    dd.classList.remove('show');
+  }
+}
+
+function setActiveOption(opts){
+  opts.forEach(o => o.classList.remove('active'));
+  if (state.activeIndex >= 0 && opts[state.activeIndex]){
+    opts[state.activeIndex].classList.add('active');
+    opts[state.activeIndex].scrollIntoView({block:'nearest'});
+  }
+}
+
+function selectProduct(idx, upc){
+  const p = state.productList.find(x => x.upc === upc);
+  if (!p) return;
+  state.selections[idx] = { upc: p.upc, description: p.description, price: p.price, qty: state.selections[idx].qty || 1 };
+
+  const inp = $('ac-' + idx);
+  inp.value = p.description;
+  inp.classList.add('has-selection');
+
+  $('meta-' + idx).innerHTML = `
+    <span class="upc">UPC ${esc(p.upc)}</span>
+    <span class="price">${esc(p.price)}</span>
+  `;
+  document.querySelector('.item-row[data-idx="'+idx+'"]').classList.add('filled');
+
+  $('dd-' + idx).classList.remove('show');
+  updateTotals();
+}
+
+function closeAllDropdowns(){
+  document.querySelectorAll('.ac-dropdown').forEach(d => d.classList.remove('show'));
+}
+
+// ============================================================================
+//  TOTALS + SUBMIT GATE
+// ============================================================================
+function updateTotals(){
+  const filled = state.selections.filter(s => s.upc);
+  const lines = filled.length;
+  const units = filled.reduce((a,s) => a + (parseInt(s.qty,10)||0), 0);
+  const dollars = filled.reduce((a,s) => a + (parsePrice(s.price) * (parseInt(s.qty,10)||0)), 0);
+
+  $('totLines').textContent = lines;
+  $('totQty').textContent = units;
+  $('totDollars').textContent = fmt$(dollars);
+
+  const storeOk = !!$('storeSel').value;
+  $('submitBtn').disabled = !(storeOk && lines > 0);
+}
+
+// ============================================================================
+//  SUBMIT
+// ============================================================================
+async function submitOrder(){
+  const btn = $('submitBtn');
+  const storeName = $('storeSel').value;
+  if (!storeName){ showToast('Please select your store first.','error'); return; }
+
+  const items = state.selections
+    .map((s, i) => ({ slot: i+1, ...s, priceNum: parsePrice(s.price), lineTotal: parsePrice(s.price) * (parseInt(s.qty,10)||0) }))
+    .filter(s => s.upc);
+
+  if (items.length === 0){ showToast('Please select at least one accessory.','error'); return; }
+
+  const totalQty = items.reduce((a,s)=>a + (parseInt(s.qty,10)||0), 0);
+  const totalDollars = items.reduce((a,s)=>a + s.lineTotal, 0);
+
+  const payload = {
+    submittedAt: new Date().toISOString(),
+    submittedAtLocal: new Date().toLocaleString(),
+    storeName,
+    managerName:  state.store.managerName  || '',
+    managerEmail: state.store.managerEmail || '',
+    districtManagerEmail: state.store.dmEmail || '',
+    totalLines: items.length,
+    totalQty,
+    totalEstimatedCost: '$' + totalDollars.toFixed(2),
+    totalEstimatedCostNumber: Number(totalDollars.toFixed(2)),
+    items,
+    // Flattened arrays — easy for Zapier email templates / Looping by Zapier
+    upcs:          items.map(s => s.upc),
+    descriptions:  items.map(s => s.description),
+    prices:        items.map(s => s.price),
+    quantities:    items.map(s => s.qty),
+    lineTotals:    items.map(s => '$' + s.lineTotal.toFixed(2)),
+    // Human-readable summary line per item — drop straight into an email body
+    orderLines:    items.map(s => `• ${s.qty} × ${s.description} (UPC ${s.upc}) @ ${s.price} = $${s.lineTotal.toFixed(2)}`),
+    orderSummaryText: items.map(s => `• ${s.qty} × ${s.description} (UPC ${s.upc}) @ ${s.price} = $${s.lineTotal.toFixed(2)}`).join('\n')
+  };
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Sending…';
+
+  try {
+    // Zapier catch hooks accept POST JSON; we DON'T set custom headers so the
+    // request stays a "simple" CORS request (no preflight). Zapier always
+    // responds with permissive CORS, so the response is readable.
+    const resp = await fetch(ZAPIER_WEBHOOK, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) throw new Error('Webhook returned ' + resp.status);
+
+    // success
+    $('successSummary').innerHTML =
+      `<div><strong>Store:</strong> ${esc(storeName)}</div>` +
+      `<div><strong>Lines:</strong> ${items.length}</div>` +
+      `<div><strong>Total Units:</strong> ${totalQty}</div>` +
+      `<div><strong>Est. Cost:</strong> $${totalDollars.toFixed(2)}</div>`;
+    $('successOverlay').classList.add('show');
+  } catch(err){
+    console.error(err);
+    showToast('Submit failed: ' + err.message + ' — please try again or contact Jeff.', 'error', 5000);
+    btn.disabled = false;
+    btn.innerHTML = 'Submit Order';
+  }
+}
+
+// ============================================================================
+//  INIT
+// ============================================================================
+async function init(){
+  renderItems();
+
+  try {
+    await Promise.all([loadInventory(), loadDirectory()]);
+    populateStores();
+    const count = state.productList.length;
+    const storeCount = (state.directory.stores || []).length;
+    $('dataStatus').className = 'pill ok';
+    $('dataStatus').textContent = `${count} SKUs · ${storeCount} stores loaded`;
+  } catch(err){
+    console.error(err);
+    $('dataStatus').className = 'pill err';
+    $('dataStatus').textContent = 'Load failed';
+    showToast('Failed to load data: ' + err.message, 'error', 6000);
+    $('itemList').innerHTML = '<div class="loading" style="color:var(--red)">Could not load inventory. Please refresh the page.</div>';
+    return;
+  }
+
+  $('storeSel').addEventListener('change', onStoreChange);
+  $('submitBtn').addEventListener('click', submitOrder);
+
+  // close dropdowns on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ac-wrap')) closeAllDropdowns();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
