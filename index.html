@@ -641,27 +641,69 @@ async function submitOrder(){
   const totalQty = items.reduce((a,s)=>a + (parseInt(s.qty,10)||0), 0);
   const totalDollars = items.reduce((a,s)=>a + s.lineTotal, 0);
 
+  // ─── Build a human-readable order ID + date/time strings ───────────────
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const orderId = 'BFX-' +
+    now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + '-' +
+    pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+  const submittedDay  = now.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const submittedTime = now.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+
+  // ─── Pre-render the line-item <tr> rows for the Outlook email ──────────
+  // Outlook-safe: tables, bgcolor attr + inline style, no CSS3.
+  const escHtml = (s) => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const itemRowsHtml = items.map((s, i) => {
+    const stripeBg = (i % 2 === 0) ? '#ffffff' : '#f8fafc';
+    const lineTotalFmt = '$' + s.lineTotal.toFixed(2);
+    const slotNum = String(i + 1).padStart(2, '0');
+    return ''
+      + '<tr>'
+      +   '<td align="center" bgcolor="' + stripeBg + '" style="padding:14px 8px;border-bottom:1px solid #e2e8f0;color:#94a3b8;font-size:12px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">' + slotNum + '</td>'
+      +   '<td bgcolor="' + stripeBg + '" style="padding:14px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-size:14px;line-height:1.45;font-family:Arial,Helvetica,sans-serif;">' + escHtml(s.description) + '</td>'
+      +   '<td bgcolor="' + stripeBg + '" style="padding:14px 10px;border-bottom:1px solid #e2e8f0;color:#475569;font-size:12px;font-family:Consolas,\'Courier New\',monospace;letter-spacing:0.4px;white-space:nowrap;">' + escHtml(s.upc) + '</td>'
+      +   '<td align="right" bgcolor="' + stripeBg + '" style="padding:14px 10px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-size:14px;font-family:Arial,Helvetica,sans-serif;white-space:nowrap;">' + escHtml(s.price) + '</td>'
+      +   '<td align="center" bgcolor="' + stripeBg + '" style="padding:14px 8px;border-bottom:1px solid #e2e8f0;font-family:Arial,Helvetica,sans-serif;">'
+      +     '<span style="display:inline-block;min-width:30px;padding:4px 12px;background-color:#dbeafe;color:#1d4ed8;border-radius:12px;font-weight:700;font-size:13px;">' + escHtml(String(s.qty)) + '</span>'
+      +   '</td>'
+      +   '<td align="right" bgcolor="' + stripeBg + '" style="padding:14px 12px;border-bottom:1px solid #e2e8f0;color:#0a3d91;font-size:14px;font-weight:700;font-family:Arial,Helvetica,sans-serif;white-space:nowrap;">' + lineTotalFmt + '</td>'
+      + '</tr>';
+  }).join('');
+
   const payload = {
-    submittedAt: new Date().toISOString(),
-    submittedAtLocal: new Date().toLocaleString(),
+    // ─── Identity / timing ───────────────────────────────────────────────
+    orderId,
+    submittedAt: now.toISOString(),
+    submittedAtLocal: now.toLocaleString(),
+    submittedDay,
+    submittedTime,
+
+    // ─── Routing ─────────────────────────────────────────────────────────
     storeName,
     managerName:  state.store.managerName  || '',
     managerEmail: state.store.managerEmail || '',
     districtManagerEmail: state.store.dmEmail || '',
+
+    // ─── Totals ──────────────────────────────────────────────────────────
     totalLines: items.length,
     totalQty,
     totalEstimatedCost: '$' + totalDollars.toFixed(2),
     totalEstimatedCostNumber: Number(totalDollars.toFixed(2)),
+
+    // ─── Full structured items (for other consumers) ─────────────────────
     items,
-    // Flattened arrays — easy for Zapier email templates / Looping by Zapier
-    upcs:          items.map(s => s.upc),
-    descriptions:  items.map(s => s.description),
-    prices:        items.map(s => s.price),
-    quantities:    items.map(s => s.qty),
-    lineTotals:    items.map(s => '$' + s.lineTotal.toFixed(2)),
-    // Human-readable summary line per item — drop straight into an email body
-    orderLines:    items.map(s => `• ${s.qty} × ${s.description} (UPC ${s.upc}) @ ${s.price} = $${s.lineTotal.toFixed(2)}`),
-    orderSummaryText: items.map(s => `• ${s.qty} × ${s.description} (UPC ${s.upc}) @ ${s.price} = $${s.lineTotal.toFixed(2)}`).join('\n')
+    upcs:         items.map(s => s.upc),
+    descriptions: items.map(s => s.description),
+    prices:       items.map(s => s.price),
+    quantities:   items.map(s => s.qty),
+    lineTotals:   items.map(s => '$' + s.lineTotal.toFixed(2)),
+
+    // ─── Plain-text rendering (for fallback bodies) ──────────────────────
+    orderLines:       items.map(s => `• ${s.qty} × ${s.description} (UPC ${s.upc}) @ ${s.price} = $${s.lineTotal.toFixed(2)}`),
+    orderSummaryText: items.map(s => `• ${s.qty} × ${s.description} (UPC ${s.upc}) @ ${s.price} = $${s.lineTotal.toFixed(2)}`).join('\n'),
+
+    // ─── Pre-rendered HTML for the Outlook email (drop straight in) ──────
+    itemRowsHtml
   };
 
   btn.disabled = true;
