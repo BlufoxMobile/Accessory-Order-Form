@@ -157,13 +157,9 @@
   }
   .submit-card{
     background:var(--card);border:1px solid var(--border);border-radius:14px;
-    padding:16px 22px;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 22px;display:flex;align-items:center;justify-content:flex-end;
     gap:14px;flex-wrap:wrap;box-shadow:0 8px 32px rgba(0,0,0,.45);
   }
-  .totals{display:flex;gap:18px;flex-wrap:wrap}
-  .totals .tt{display:flex;flex-direction:column;gap:2px}
-  .totals .tt .n{font-size:20px;font-weight:700;color:var(--text);font-family:'Space Grotesk',sans-serif}
-  .totals .tt .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 
   .btn{
     padding:13px 26px;font-size:14px;font-weight:700;letter-spacing:.02em;
@@ -276,11 +272,6 @@
 
   <div class="footer-bar">
     <div class="submit-card">
-      <div class="totals">
-        <div class="tt"><div class="n" id="totLines">0</div><div class="l">Lines Filled</div></div>
-        <div class="tt"><div class="n" id="totQty">0</div><div class="l">Total Units</div></div>
-        <div class="tt"><div class="n" id="totDollars">$0.00</div><div class="l">Est. Cost</div></div>
-      </div>
       <button id="submitBtn" class="btn btn-primary" disabled>Submit Order</button>
     </div>
   </div>
@@ -613,12 +604,6 @@ function updateTotals(){
   // A line only counts if BOTH an accessory is selected AND qty > 0
   const filled = state.selections.filter(s => s.upc && (parseInt(s.qty,10)||0) > 0);
   const lines = filled.length;
-  const units = filled.reduce((a,s) => a + (parseInt(s.qty,10)||0), 0);
-  const dollars = filled.reduce((a,s) => a + (parsePrice(s.price) * (parseInt(s.qty,10)||0)), 0);
-
-  $('totLines').textContent = lines;
-  $('totQty').textContent = units;
-  $('totDollars').textContent = fmt$(dollars);
 
   const storeOk = !!$('storeSel').value;
   $('submitBtn').disabled = !(storeOk && lines > 0);
