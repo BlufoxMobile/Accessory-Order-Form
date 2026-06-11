@@ -307,7 +307,7 @@ const state = {
   productLibrary: {},     // { upc: { description, price, priceNum } }
   productList: [],        // [ { upc, description, price, priceNum, searchBlob } ]
   directory: null,        // { stores, storeManagers, storeDMs, storeManagerNames }
-  store: { name:'', managerName:'', managerEmail:'', dmEmail:'' },
+  store: { name:'', managerName:'', managerEmail:'', asmEmail:'', dmEmail:'' },
   selections: Array.from({length:ITEM_SLOTS},()=>({upc:'',description:'',price:'',qty:0})),
   activeDropdown: null,
   activeIndex: -1,
@@ -383,6 +383,7 @@ function onStoreChange(){
     name: v,
     managerName:  (d.storeManagerNames && d.storeManagerNames[v]) || '',
     managerEmail: (d.storeManagers     && d.storeManagers[v])     || '',
+    asmEmail:     (d.storeAMs          && d.storeAMs[v])          || '',
     dmEmail:      (d.storeDMs          && d.storeDMs[v])          || ''
   };
   const hint = $('storeHint');
@@ -668,6 +669,7 @@ async function submitOrder(){
     managerName:  state.store.managerName  || '',
     managerEmail: state.store.managerEmail || '',
     districtManagerEmail: state.store.dmEmail || '',
+    asmEmail: state.store.asmEmail || '',
 
     // ─── Totals ──────────────────────────────────────────────────────────
     totalLines: items.length,
